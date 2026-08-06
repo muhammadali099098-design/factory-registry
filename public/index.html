@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Реестр заводов</title>
+<style>
+  :root{--paper:#f4f1e9;--card:#fbfaf5;--ink:#1a1d22;--ink-soft:#565b63;--rule:#d9d2c2;--petrol:#0e5a56;--petrol-dark:#0a443f;--petrol-soft:#dce9e6;--signal:#b63a3a;--signal-soft:#f6e2de;--amber:#a06a12;--amber-soft:#f4ead6;--slate:#6b7078;--slate-soft:#e7e6e1;--accent:#d92b2b;--dark:#101114;--dark-2:#1b1d22;--dark-soft:#2a2d33;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+  .hidden{display:none!important}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit}
+  .btn{border:none;border-radius:8px;padding:9px 16px;font-size:14px;font-weight:600}
+  .btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--petrol-dark)}
+  .btn-o{background:transparent;border:1px solid rgba(26,29,34,.25);color:var(--ink)}.btn-o:hover{background:rgba(26,29,34,.05)}
+  .btn-s{border:1px solid rgba(26,29,34,.25);background:transparent;color:var(--ink);border-radius:8px;padding:8px 12px;font-size:13px}
+  .input{width:100%;border:1px solid var(--rule);border-radius:8px;background:#fff;padding:9px 12px;font-size:14px;outline:none}
+  .input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,90,86,.15)}
+  .lbl{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin:0 0 4px}
+  .field{margin-bottom:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  .auth{max-width:420px;margin:8vh auto;background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:32px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .auth h1{font-size:24px;margin-bottom:4px}.auth p{color:var(--ink-soft);font-size:14px;margin-bottom:20px}
+  .auth .err{background:var(--signal-soft);color:var(--signal);border-radius:8px;padding:10px;font-size:13px;margin-bottom:14px}
+  .linkBtn{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;padding:4px 0}
+
+  .darkhead{background:linear-gradient(180deg,var(--dark),var(--dark-2));color:#fff;border-radius:16px;padding:20px 22px 0;margin:0 0 20px;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+  .dh-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .dh-brand{display:flex;align-items:center;gap:16px;min-width:0}
+  .logo{height:52px;width:auto;max-width:280px;object-fit:contain}
+  .brand-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#ffa0a0;font-weight:700;margin-bottom:2px}
+  .dh-sub{font-size:22px;font-weight:700;color:#fff;line-height:1.1}
+  nav{display:flex;gap:4px;margin-top:18px;border-top:1px solid rgba(255,255,255,.12);padding-top:10px}
+  nav button{background:none;border:none;padding:9px 16px;border-radius:8px 8px 0 0;font-size:14px;font-weight:600;color:rgba(255,255,255,.65)}
+  nav button:hover{color:#fff}
+  nav button.on{background:var(--accent);color:#fff}
+  .who{font-size:13px;color:rgba(255,255,255,.7);text-align:right}.who b{color:#fff}
+  .who .btn-s{border-color:rgba(255,255,255,.3);color:#fff}.who .btn-s:hover{background:rgba(255,255,255,.1)}
+
+  .toolbar{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:16px;margin-bottom:16px}
+  .search-row{display:grid;grid-template-columns:1fr minmax(150px,220px) minmax(180px,260px);gap:10px}
+  @media(max-width:700px){.search-row{grid-template-columns:1fr}}
+  .toolbar-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px solid var(--rule);margin-top:14px;padding-top:12px}
+  .count{font-size:13px;color:var(--ink-soft)}
+  .total-corner{font-size:13px;color:var(--ink-soft)}
+  .total-corner b{color:var(--ink-soft)}
+
+  .tablewrap{background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);text-align:left;padding:12px 14px;border-bottom:1px solid var(--rule);background:rgba(0,0,0,.02)}
+  td{padding:12px 14px;border-bottom:1px solid rgba(217,210,194,.5);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr.row:hover{background:#f0ece0;cursor:pointer}
+  .nm{font-weight:600}.sub{font-size:12px;color:var(--ink-soft)}
+  .author{font-size:11px;color:var(--ink-soft);margin-top:4px}
+  .chip{display:inline-block;background:#f7dfdf;color:var(--accent);border-radius:6px;padding:1px 8px;font-size:12px;margin:1px}
+  .rel{font-size:13px;color:var(--ink-soft)}
+  .c-item{font-size:13px;margin-bottom:3px}
+  .c-item b{font-weight:600}
+  .c-more{font-size:12px;color:var(--accent)}
+
+  .overlay{position:fixed;inset:0;background:rgba(26,29,34,.45);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;z-index:50}
+  .modal{background:var(--card);border-radius:14px;width:100%;max-width:720px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--rule)}
+  .modal-head h3{font-size:20px}
+  .modal-body{padding:22px}
+  .x{background:none;border:none;font-size:22px;color:var(--ink-soft);line-height:1}
+  .form-actions{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--rule);margin-top:18px;padding-top:16px}
+  dl.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:12px}
+  @media(max-width:700px){dl.grid{grid-template-columns:1fr}}
+  dt{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft)}
+  dd{font-family:ui-monospace,Menlo,monospace;font-size:14px;margin-top:1px}
+  .note-box{border-left:3px solid var(--accent);background:rgba(0,0,0,.03);border-radius:0 8px 8px 0;padding:12px 14px;margin-top:16px;white-space:pre-wrap;font-size:14px}
+  .contact-card{border:1px solid var(--rule);border-radius:10px;padding:12px;margin-bottom:10px;background:rgba(0,0,0,.02)}
+  .contact-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .contact-head b{font-size:14px}
+
+  .activity{font-size:14px}.activity .item{padding:10px 0;border-bottom:1px solid rgba(217,210,194,.5)}
+  .badge-a{display:inline-block;border-radius:5px;padding:1px 8px;font-size:12px;font-weight:600}
+  .a-create{background:var(--petrol-soft);color:var(--petrol)}
+  .a-update{background:var(--amber-soft);color:var(--amber)}
+  .a-delete{background:var(--signal-soft);color:var(--signal)}
+  .a-merge{background:var(--slate-soft);color:var(--slate)}
+
+  .admin-cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:800px){.admin-cards{grid-template-columns:1fr}}
+  .acard{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:18px}
+  .acard h3{font-size:16px;margin-bottom:12px}
+  .user-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(217,210,194,.5);flex-wrap:wrap}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:6px}
+  .empty{padding:40px;text-align:center;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ВОЙТИ -->
+  <div id="authView" class="hidden">
+    <div class="auth">
+      <h1>Реестр заводов</h1>
+      <p>Вход для сотрудников</p>
+      <div id="authErr" class="err hidden"></div>
+      <div class="field"><label class="lbl">Email</label><input id="aEmail" class="input" type="email" autocomplete="email"></div>
+      <div class="field"><label class="lbl">Пароль</label><input id="aPass" class="input" type="password" autocomplete="current-password"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-p" id="aLoginBtn">Войти</button>
+        <button class="linkBtn" id="aForgotBtn">Забыли пароль?</button>
+      </div>
+      <div id="regBlock" class="hidden" style="margin-top:18px;border-top:1px solid var(--rule);padding-top:16px">
+        <p style="font-weight:600;margin-bottom:10px">Первый запуск — создание администратора</p>
+        <div class="field"><label class="lbl">Имя</label><input id="rName" class="input"></div>
+        <div class="field"><label class="lbl">Email</label><input id="rEmail" class="input" type="email"></div>
+        <div class="field"><label class="lbl">Пароль (мин. 6 символов)</label><input id="rPass" class="input" type="password"></div>
+        <button class="btn btn-p" id="rRegisterBtn" style="width:100%">Создать администратора</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПРИЛОЖЕНИЕ -->
+  <div id="appView" class="hidden">
+    <header class="darkhead">
+      <div class="dh-top">
+        <div class="dh-brand">
+          <img class="logo" src="/assets/logo.png" alt="Логотип">
+          <div>
+            <div class="brand-kicker">Единый реестр поставщиков</div>
+            <div class="dh-sub" id="siteTitle">Реестр заводов</div>
+          </div>
+        </div>
+        <div class="who">
+          <div>Вы вошли как <b id="meName"></b></div>
+          <div style="margin-top:8px"><button class="btn-s" id="logoutBtn">Выйти</button></div>
+        </div>
+      </div>
+      <nav id="nav">
+        <button data-view="factories" class="on">Заводы</button>
+        <button data-view="audit">Журнал действий</button>
+        <button data-view="admin" id="navAdmin" class="hidden">Админ-панель</button>
+      </nav>
+    </header>
+
+    <!-- ЗАВОДЫ -->
+    <section id="view-factories">
+      <div class="toolbar">
+        <div class="search-row">
+          <input id="fSearch" class="input" placeholder="Поиск: название, город, продукция…">
+          <select id="fRel" class="input"><option value="">Надёжность: все</option><option value="reliable">Надёжный</option><option value="issues">Есть проблемы</option><option value="unknown">Не оценено</option></select>
+          <select id="fProduct" class="input"><option value="">Продукция: все</option></select>
+        </div>
+        <div class="toolbar-foot">
+          <div class="count" id="fCount">Записей: 0</div>
+          <div class="total-corner" id="fTotal">Всего заводов: <b>0</b></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-o" id="resetBtn">Сбросить</button>
+            <button class="btn btn-o" id="exportBtn">Экспорт в Excel</button>
+            <button class="btn btn-p" id="addBtn">+ Добавить завод</button>
+          </div>
+        </div>
+      </div>
+      <div id="tableArea"></div>
+    </section>
+
+    <!-- ЖУРНАЛ -->
+    <section id="view-audit" class="hidden">
+      <div class="tablewrap"><div style="padding:18px" id="auditArea">Загрузка…</div></div>
+    </section>
+
+    <!-- АДМИН -->
+    <section id="view-admin" class="hidden">
+      <div class="admin-cards">
+        <div class="acard">
+          <h3>Сотрудники</h3>
+          <div id="usersList"></div>
+          <div style="border-top:1px solid var(--rule);margin-top:12px;padding-top:14px">
+            <div class="field"><label class="lbl">Имя</label><input id="uName" class="input"></div>
+            <div class="field"><label class="lbl">Email</label><input id="uEmail" class="input" type="email"></div>
+            <div class="field"><label class="lbl">Пароль (мин. 6 символов)</label><input id="uPass" class="input" type="password"></div>
+            <button class="btn btn-p" id="uAddBtn">Добавить сотрудника</button>
+            <div class="hint">Каждый сотрудник входит со своим логином. В реестре видно, кто добавил или изменил завод.</div>
+          </div>
+        </div>
+        <div class="acard">
+          <h3>Настройки сайта</h3>
+          <div class="field"><label class="lbl">Название реестра</label><input id="sTitle" class="input"></div>
+          <div class="field"><label class="lbl">Цвет акцента</label><input id="sColor" class="input" type="color" style="height:44px;padding:4px"></div>
+          <button class="btn btn-p" id="sSaveBtn">Сохранить настройки</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- МОДАЛКА -->
+<div id="modal" class="overlay hidden">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle">Завод</h3><button class="x" id="modalClose">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const API = "/api";
+let ME = null;
+let EDIT_ID = null;
+
+const REL = { reliable:["Надёжный","#0a443f"], issues:["Есть проблемы","#b63a3a"], unknown:["Не оценено","#6b7078"] };
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+async function req(url, opts={}){
+  const r = await fetch(API+url, { headers:{"Content-Type":"application/json", ...(opts.headers||{})}, ...opts });
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok){ const e = new Error(data.error || "Ошибка запроса"); e.status = r.status; e.data = data; throw e; }
+  return data;
+}
+
+// ---------- Вход ----------
+function showAuth(){
+  $("appView").classList.add("hidden");
+  $("authView").classList.remove("hidden");
+  // показываем регистрацию, только если пользователей ещё нет
+  $("regBlock").classList.add("hidden");
+  fetch(API+"/auth/me").then(async r=>{
+    const d = await r.json();
+    if(!d.user){
+      // попробуем понять, есть ли пользователи — если регистрация не запрещена, покажем
+      try{ const x = await fetch(API+"/settings"); x.ok && $("regBlock").classList.remove("hidden"); }catch(e){}
+    }
+  });
+}
+$("aLoginBtn").onclick = async ()=>{
+  $("authErr").classList.add("hidden");
+  try{ const d = await req("/auth/login",{method:"POST",body:JSON.stringify({email:$("aEmail").value,password:$("aPass").value})}); ME=d.user; showApp(); }
+  catch(e){ showErr(e.message); }
+};
+$("rRegisterBtn").onclick = async ()=>{
+  $("authErr").classList.add("hidden");
+  try{ const d = await req("/auth/register",{method:"POST",body:JSON.stringify({name:$("rName").value,email:$("rEmail").value,password:$("rPass").value})}); ME=d.user; showApp(); }
+  catch(e){ showErr(e.message); }
+};
+$("aForgotBtn").onclick = ()=>{
+  $("modalTitle").textContent = "Забыли пароль";
+  $("modalBody").innerHTML = `
+    <p style="font-size:14px;color:var(--ink)">Если вы забыли пароль — обратитесь к <b>администратору реестра</b>. Он сбросит пароль и выдаст вам новый.</p>
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:10px">Если вы администратор и забыли свой пароль — сброс делается через базу сайта (см. README) или обратитесь к тому, кто настраивал сайт.</p>
+    <div class="form-actions"><button class="btn btn-p" id="fClose">Понятно</button></div>`;
+  openModal(); $("fClose").onclick=closeModal;
+};
+function showErr(m){ const el=$("authErr"); el.textContent=m; el.classList.remove("hidden"); }
+$("logoutBtn").onclick = async ()=>{ await req("/auth/logout",{method:"POST"}); location.reload(); };
+
+// ---------- Навигация ----------
+function showApp(){
+  $("authView").classList.add("hidden");
+  $("appView").classList.remove("hidden");
+  $("meName").textContent = ME.name;
+  $("navAdmin").classList.toggle("hidden", ME.role!=="admin");
+  loadSettings(); loadTags(); loadFactories();
+}
+document.querySelectorAll("#nav button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#nav button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    ["factories","audit","admin"].forEach(v=>$("view-"+v).classList.toggle("hidden", v!==b.dataset.view));
+    if(b.dataset.view==="audit") loadAudit();
+    if(b.dataset.view==="admin") loadUsers();
+  };
+});
+
+// ---------- Настройки ----------
+async function loadSettings(){
+  try{ const s = await req("/settings"); $("siteTitle").textContent=s.title; document.documentElement.style.setProperty("--accent",s.color); document.title=s.title; $("sTitle").value=s.title; $("sColor").value=s.color; }catch(e){}
+}
+
+// ---------- Категории ----------
+async function loadTags(){
+  try{ const d = await req("/tags"); $("fProduct").innerHTML = `<option value="">Продукция: все</option>` + d.tags.map(t=>`<option>${esc(t)}</option>`).join(""); }catch(e){}
+}
+
+// ---------- Заводы ----------
+let FILTERS = { search:"", reliability:"", product:"" };
+function readFilters(){ FILTERS = { search:$("fSearch").value, reliability:$("fRel").value, product:$("fProduct").value }; }
+["fSearch","fRel","fProduct"].forEach(id=>{ $(id).addEventListener("input",()=>{ readFilters(); loadFactories(); }); });
+$("resetBtn").onclick=()=>{ $("fSearch").value="";$("fRel").value="";$("fProduct").value=""; readFilters(); loadFactories(); };
+
+async function loadFactories(){
+  const qs = new URLSearchParams();
+  for(const k in FILTERS) if(FILTERS[k]) qs.set(k, FILTERS[k]);
+  try{
+    const d = await req("/factories?"+qs.toString());
+    renderTable(d.factories);
+    $("fCount").textContent = "Найдено: "+d.factories.length;
+    $("fTotal").innerHTML = "Всего заводов: <b>"+d.factories.length+"</b>";
+  }catch(e){ $("tableArea").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+function renderTable(fs){
+  if(fs.length===0){ $("tableArea").innerHTML = `<div class="empty">Записей нет. Нажмите «+ Добавить завод».</div>`; return; }
+  let html = `<div class="tablewrap"><table><thead><tr>
+    <th>Завод</th><th>Продукция</th><th>Надёжность</th><th>Контакты</th><th>Кто изменил</th><th></th>
+    </tr></thead><tbody>`;
+  for(const f of fs){
+    const rel = REL[f.reliability] || REL.unknown;
+    const chips = f.products.slice(0,3).map(p=>`<span class="chip">${esc(p)}</span>`).join("") + (f.products.length>3?`<span class="chip">+${f.products.length-3}</span>`:"");
+    const first = f.contacts[0] || {};
+    const contactHtml = first.name? `<div class="c-item"><b>${esc(first.name)}</b>${first.role?` <span class="sub">(${esc(first.role)})</span>`:""}</div><div class="sub">${esc([first.wechat&&"WeChat: "+first.wechat, first.phone&&first.phone].filter(Boolean).join(" · ")||"—")}</div>` : `<div class="sub">—</div>`;
+    const more = f.contacts.length>1? `<div class="c-more">+ ещё ${f.contacts.length-1} контакт</div>`:"";
+    html += `<tr class="row" data-id="${f.id}">
+      <td><div class="nm">${esc(f.name)}</div>${f.city?`<div class="sub">${esc(f.city)}</div>`:""}</td>
+      <td><div>${chips||"—"}</div></td>
+      <td><span class="rel"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${rel[1]};margin-right:5px"></span>${rel[0]}</span></td>
+      <td>${contactHtml}${more}</td>
+      <td><div class="sub">изменил: <b>${esc(f.updatedBy||"—")}</b></div><div class="author">добавил: ${esc(f.createdBy||"—")}</div></td>
+      <td style="white-space:nowrap">
+        <button class="btn-s" data-act="edit" data-id="${f.id}">Изменить</button>
+        <button class="btn-s" style="color:var(--signal);border-color:rgba(182,58,58,.3)" data-act="del" data-id="${f.id}">Удалить</button>
+      </td>
+    </tr>`;
+  }
+  html += `</tbody></table></div>`;
+  $("tableArea").innerHTML = html;
+  $("tableArea").querySelectorAll("tr.row").forEach(tr=>{ tr.addEventListener("click",e=>{ if(e.target.closest("[data-act]")) return; openDetail(Number(tr.dataset.id)); }); });
+  $("tableArea").querySelectorAll("[data-act='edit']").forEach(b=>{ b.onclick=()=>{ EDIT_ID=Number(b.dataset.id); openForm(); }; });
+  $("tableArea").querySelectorAll("[data-act='del']").forEach(b=>{ b.onclick=()=>delFactory(Number(b.dataset.id)); });
+}
+
+// ---------- Карточка ----------
+async function openDetail(id){
+  try{
+    const d = await req("/factories/"+id);
+    const f = d.factory;
+    const rel = REL[f.reliability] || REL.unknown;
+    const contacts = f.contacts.length? f.contacts.map(c=>`
+      <div class="contact-card">
+        <div class="contact-head"><b>${esc(c.name||"Без имени")}</b>${c.role?`<span class="sub">${esc(c.role)}</span>`:""}</div>
+        ${[c.wechat&&`WeChat: <b>${esc(c.wechat)}</b>`, c.whatsapp&&`WhatsApp: <b>${esc(c.whatsapp)}</b>`, c.phone&&esc(c.phone), c.email&&`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`].filter(Boolean).map(x=>`<div class="sub" style="margin:2px 0">${x}</div>`).join("")||`<div class="sub">Контакты не указаны</div>`}
+      </div>`).join("") : `<div class="sub">Контакты не указаны</div>`;
+    const rows = [
+      ["Город", f.city],["Надёжность", rel[0]],
+      ["Продукция", f.products.join(", ")||"—"],
+      ["MOQ", f.moq||"—"],["Сроки", f.leadTime||"—"],["Оплата", f.payment||"—"],["Сертификаты", f.certifications||"—"],
+      ["Добавлен", f.createdAt+" ("+(f.createdBy||"—")+")"],["Обновлён", f.updatedAt+" ("+(f.updatedBy||"—")+")"]
+    ].filter(r=>r[1]).map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    $("modalTitle").textContent = f.name;
+    $("modalBody").innerHTML = `
+      <div style="margin-bottom:6px">${f.products.map(p=>`<span class="chip">${esc(p)}</span>`).join("")}</div>
+      <div style="font-size:13px;color:var(--ink-soft);font-weight:600;margin:14px 0 8px">Контакты (${f.contacts.length})</div>
+      ${contacts}
+      <dl class="grid">${rows}</dl>
+      ${f.notes?`<div class="note-box">${esc(f.notes)}</div>`:""}
+      <div class="form-actions">
+        <button class="btn btn-o" id="dClose">Закрыть</button>
+        <button class="btn btn-p" id="dEdit">Редактировать</button>
+      </div>`;
+    openModal();
+    $("dClose").onclick=closeModal;
+    $("dEdit").onclick=()=>{ EDIT_ID=f.id; closeModal(); openForm(); };
+  }catch(e){ alert(e.message); }
+}
+
+// ---------- Форма (с несколькими контактами) ----------
+let formContacts = [];
+async function openForm(){
+  let f = { name:"",city:"",products:[],reliability:"unknown",moq:"",leadTime:"",payment:"",certifications:"",notes:"",contacts:[] };
+  if(EDIT_ID){ const d = await req("/factories/"+EDIT_ID); f = d.factory; }
+  formContacts = f.contacts.map(c=>({name:c.name||"",role:c.role||"",wechat:c.wechat||"",whatsapp:c.whatsapp||"",phone:c.phone||"",email:c.email||""}));
+  if(formContacts.length===0) formContacts.push(emptyContact());
+  $("modalTitle").textContent = EDIT_ID? "Редактировать завод" : "Добавить завод";
+  renderFormHead(f);
+}
+function emptyContact(){ return {name:"",role:"",wechat:"",whatsapp:"",phone:"",email:""}; }
+function renderFormHead(f){
+  $("modalBody").innerHTML = `
+    <div class="field"><label class="lbl">Название завода</label><input id="fo_name" class="input" value="${esc(f.name)}"></div>
+    <div class="field"><label class="lbl">Город / провинция</label><input id="fo_city" class="input" value="${esc(f.city)}" placeholder="Напр. Шэньчжэнь, Гуандун"></div>
+    <div class="field"><label class="lbl">Виды продукции (через запятую)</label><input id="fo_products" class="input" value="${esc(f.products.join(", "))}"></div>
+    <div class="field"><label class="lbl">Надёжность</label><select id="fo_rel" class="input">${Object.entries(REL).map(([v,a])=>`<option value="${v}" ${f.reliability===v?"selected":""}>${a[0]}</option>`).join("")}</select></div>
+    <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;margin:6px 0 10px">Контакты завода</div>
+    <div id="contactsBox"></div>
+    <button class="btn btn-o" id="addContactBtn" style="margin-bottom:12px">+ Добавить контакт</button>
+    <div class="grid2">
+      <div class="field"><label class="lbl">MOQ</label><input id="fo_moq" class="input" value="${esc(f.moq)}" placeholder="500 шт"></div>
+      <div class="field"><label class="lbl">Сроки</label><input id="fo_lead" class="input" value="${esc(f.leadTime)}" placeholder="30-45 дней"></div>
+    </div>
+    <div class="field"><label class="lbl">Оплата</label><input id="fo_pay" class="input" value="${esc(f.payment)}" placeholder="T/T 30%"></div>
+    <div class="field"><label class="lbl">Сертификаты</label><input id="fo_cert" class="input" value="${esc(f.certifications)}" placeholder="CE, FCC, RoHS"></div>
+    <div class="field"><label class="lbl">Примечания</label><textarea id="fo_notes" class="input" rows="3">${esc(f.notes)}</textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-o" id="foCancel">Отмена</button>
+      <button class="btn btn-p" id="foSave">Сохранить</button>
+    </div>`;
+  renderContacts();
+  $("addContactBtn").onclick=()=>{ formContacts.push(emptyContact()); renderContacts(); };
+  $("foCancel").onclick=closeModal;
+  $("foSave").onclick=()=>submitForm();
+}
+function renderContacts(){
+  const box = $("contactsBox");
+  box.innerHTML = formContacts.map((c,i)=>`
+    <div class="contact-card">
+      <div class="contact-head"><b>Контакт ${i+1}</b>
+        <button class="btn-s" data-rm="${i}">Убрать</button></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Имя</label><input class="input c-${i}" data-i="${i}" data-k="name" value="${esc(c.name)}"></div>
+        <div class="field"><label class="lbl">Должность</label><input class="input c-${i}" data-i="${i}" data-k="role" value="${esc(c.role)}"></div>
+        <div class="field"><label class="lbl">WeChat</label><input class="input c-${i}" data-i="${i}" data-k="wechat" value="${esc(c.wechat)}"></div>
+        <div class="field"><label class="lbl">WhatsApp</label><input class="input c-${i}" data-i="${i}" data-k="whatsapp" value="${esc(c.whatsapp)}"></div>
+        <div class="field"><label class="lbl">Телефон</label><input class="input c-${i}" data-i="${i}" data-k="phone" value="${esc(c.phone)}"></div>
+        <div class="field"><label class="lbl">Email</label><input class="input c-${i}" data-i="${i}" data-k="email" value="${esc(c.email)}"></div>
+      </div>
+    </div>`).join("");
+  box.querySelectorAll("[data-rm]").forEach(b=>{ b.onclick=()=>{ formContacts.splice(Number(b.dataset.rm),1); if(!formContacts.length) formContacts.push(emptyContact()); renderContacts(); }; });
+  box.querySelectorAll(".c-"+formContacts.map((_,i)=>i).join(",.c-")).forEach(inp=>{
+    inp.addEventListener("input",()=>{ formContacts[Number(inp.dataset.i)][inp.dataset.k] = inp.value; });
+  });
+}
+
+function collectForm(){
+  return {
+    name:$("fo_name").value, city:$("fo_city").value,
+    products:$("fo_products").value.split(",").map(s=>s.trim()).filter(Boolean),
+    reliability:$("fo_rel").value, moq:$("fo_moq").value, leadTime:$("fo_lead").value,
+    payment:$("fo_pay").value, certifications:$("fo_cert").value, notes:$("fo_notes").value,
+    contacts: formContacts.filter(c=>c.name||c.wechat||c.whatsapp||c.phone||c.email)
+  };
+}
+function submitForm(force=false){
+  const body = collectForm();
+  if(force) body.force = true;
+  const url = EDIT_ID? "/factories/"+EDIT_ID : "/factories";
+  const method = EDIT_ID? "PUT" : "POST";
+  req(url,{method, body:JSON.stringify(body)}).then(()=>{ closeModal(); EDIT_ID=null; refreshAll(); })
+    .catch(e=>{
+      if(e.status===409 && e.data.duplicates){ showDuplicates(e.data.duplicates, body); }
+      else alert(e.message);
+    });
+}
+function showDuplicates(dups, body){
+  $("modalTitle").textContent = "Похожий завод уже есть";
+  $("modalBody").innerHTML = `
+    <p style="font-size:14px;margin-bottom:14px">Система нашла похожие заводы. Возможно, кто-то из коллег уже добавил этот завод. Что сделать?</p>
+    <div style="max-height:260px;overflow-y:auto">${dups.map(d=>`
+      <div class="contact-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div><b>${esc(d.name)}</b>${d.city?` <span class="sub">${esc(d.city)}</span>`:""}
+          <div class="sub">${d.products?esc(d.products):"—"} · контактов: ${d.contactsCount}</div></div>
+        <button class="btn-s" data-merge="${d.id}">Объединить сюда</button>
+      </div>`).join("")}</div>
+    <div class="form-actions">
+      <button class="btn btn-o" id="dupBack">Назад</button>
+      <button class="btn btn-o" id="dupForce">Всё равно добавить</button>
+    </div>`;
+  $("dupBack").onclick=()=>{ EDIT_ID=null; openForm(); };
+  $("dupForce").onclick=()=>submitForm(true);
+  $("modalBody").querySelectorAll("[data-merge]").forEach(b=>{
+    b.onclick=async ()=>{
+      const dupId = Number(b.dataset.merge);
+      try{
+        const d = await req("/factories/"+dupId);
+        const ef = d.factory;
+        const merged = { name:ef.name, city:ef.city, products:ef.products, reliability:ef.reliability, moq:ef.moq, leadTime:ef.leadTime, payment:ef.payment, certifications:ef.certifications, notes:[ef.notes, body.notes].filter(Boolean).join("\n"), contacts:[...ef.contacts.map(c=>({name:c.name,role:c.role,wechat:c.wechat,whatsapp:c.whatsapp,phone:c.phone,email:c.email})), ...body.contacts], force:true };
+        await req("/factories/"+dupId,{method:"PUT",body:JSON.stringify(merged)});
+        closeModal(); EDIT_ID=null; refreshAll();
+      }catch(e){ alert(e.message); }
+    };
+  });
+}
+$("addBtn").onclick=()=>{ EDIT_ID=null; openForm(); };
+$("modalClose").onclick=closeModal;
+function openModal(){ $("modal").classList.remove("hidden"); }
+function closeModal(){ $("modal").classList.add("hidden"); }
+$("modal").addEventListener("mousedown", e=>{ if(e.target===$("modal")) closeModal(); });
+
+async function delFactory(id){
+  if(!confirm("Удалить этот завод?")) return;
+  try{ await req("/factories/"+id,{method:"DELETE"}); refreshAll(); }catch(e){ alert(e.message); }
+}
+function refreshAll(){ loadTags(); loadFactories(); }
+
+// ---------- Журнал ----------
+async function loadAudit(){
+  try{
+    const d = await req("/audit");
+    const A = { create:["create","Добавлен"], update:["update","Изменён"], delete:["delete","Удалён"], merge:["merge","Объединён"] };
+    $("auditArea").innerHTML = `<div class="activity">` + (d.entries.length? d.entries.map(e2=>{
+      const a = A[e2.action]||[e2.action,e2.action];
+      return `<div class="item"><span class="badge-a a-${a[0]}">${a[1]}</span> «${esc(e2.factory_name||"—")}» — <b>${esc(e2.user_name||"—")}</b> ${e2.detail?`<span class="sub">${esc(e2.detail)}</span>`:""} <span class="sub">${esc(e2.created_at)}</span></div>`;
+    }).join("") : `<div class="empty">Пока нет действий</div>`) + `</div>`;
+  }catch(e){ $("auditArea").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+// ---------- Админ ----------
+async function loadUsers(){
+  try{
+    const d = await req("/users");
+    const me = ME.email;
+    $("usersList").innerHTML = d.users.map(u=>`
+      <div class="user-row">
+        <div><b>${esc(u.name)}</b> <span class="sub">${esc(u.email)}</span>
+          <span class="badge-a ${u.role==="admin"?"a-create":"a-update"}" style="margin-left:6px">${u.role==="admin"?"админ":"участник"}</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-s" data-uId="${u.id}" data-act2="reset">Сбросить пароль</button>
+          <button class="btn-s" data-uId="${u.id}" data-uRole="${u.role}" data-act2="role">${u.role==="admin"?"→ участник":"→ админ"}</button>
+          ${u.email!==me?`<button class="btn-s" style="color:var(--signal)" data-uId="${u.id}" data-act2="del">Удалить</button>`:""}
+        </div>
+      </div>`).join("") || `<div class="empty">Нет сотрудников</div>`;
+    $("usersList").querySelectorAll("[data-act2='role']").forEach(b=>{ b.onclick=()=>{ req("/users/"+b.dataset.uid,{method:"PATCH",body:JSON.stringify({role:b.dataset.urole==="admin"?"member":"admin"})}).then(loadUsers).catch(e=>alert(e.message)); }; });
+    $("usersList").querySelectorAll("[data-act2='del']").forEach(b=>{ b.onclick=()=>{ if(confirm("Удалить сотрудника?")) req("/users/"+b.dataset.uid,{method:"DELETE"}).then(loadUsers).catch(e=>alert(e.message)); }; });
+    $("usersList").querySelectorAll("[data-act2='reset']").forEach(b=>{ b.onclick=()=>resetPassword(Number(b.dataset.uid)); });
+  }catch(e){ $("usersList").innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+function resetPassword(uid){
+  $("modalTitle").textContent = "Сброс пароля";
+  $("modalBody").innerHTML = `
+    <div class="field"><label class="lbl">Новый пароль (мин. 6 символов)</label><input id="rpPass" class="input" type="text"></div>
+    <p class="hint">Сообщите новый пароль сотруднику. После входа он сможет пользоваться реестром.</p>
+    <div class="form-actions"><button class="btn btn-o" id="rpCancel">Отмена</button><button class="btn btn-p" id="rpSave">Сбросить</button></div>`;
+  openModal();
+  $("rpCancel").onclick=closeModal;
+  $("rpSave").onclick=()=>{ req("/users/"+uid+"/password",{method:"PATCH",body:JSON.stringify({password:$("rpPass").value})}).then(()=>{ closeModal(); alert("Пароль обновлён"); }).catch(e=>alert(e.message)); };
+}
+$("uAddBtn").onclick=()=>{
+  req("/users",{method:"POST",body:JSON.stringify({name:$("uName").value,email:$("uEmail").value,password:$("uPass").value})})
+    .then(()=>{ $("uName").value="";$("uEmail").value="";$("uPass").value=""; loadUsers(); }).catch(e=>alert(e.message));
+};
+$("sSaveBtn").onclick=()=>{
+  req("/settings",{method:"PUT",body:JSON.stringify({title:$("sTitle").value,color:$("sColor").value})}).then(()=>{ loadSettings(); alert("Настройки сохранены"); }).catch(e=>alert(e.message));
+};
+$("exportBtn").onclick=()=>{ window.location = API+"/export"; };
+
+// ---------- Старт ----------
+checkAuth();
+async function checkAuth(){
+  try{ const d = await req("/auth/me"); if(d.user){ ME=d.user; showApp(); } else showAuth(); }
+  catch(e){ showAuth(); }
+}
+</script>
+</body>
+</html>

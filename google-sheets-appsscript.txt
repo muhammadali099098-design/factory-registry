@@ -1,0 +1,69 @@
+/*
+*  Google Apps Script — мост между вашим сайтом и Google-таблицей.
+*  КАК УСТАНОВИТЬ:
+*  1) Откройте вашу Google-таблицу (та, что будет хранилищем заводов).
+*  2) Меню: Расширения → Apps Script.
+*  3) Удалите весь код в редакторе и вставьте этот целиком.
+*  4) Нажмите «Сохранить» (дискетка) и «Развернуть» → «Новый процесс развёртывания».
+*  5) Тип: «Веб-приложение». Выполнять от имени: «Я». Доступ: «Все, у кого есть ссылка».
+*  6) Развернуть → скопируйте URL вида .../exec и передайте его мне.
+*/
+
+const SHEET_NAME = 'Заводы';
+const COLS = ['id','name','city','products','reliability','moq','lead_time','payment','certifications','notes','contacts','created_by','updated_by','created_at','updated_at'];
+
+function setup_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+  if (sh.getLastRow() === 0) sh.appendRow(COLS);
+  return sh;
+}
+
+function doGet() {
+  return json_({ factories: readRows_() });
+}
+
+function doPost(e) {
+  var body = JSON.parse(e.postData.contents);
+  if (body && Array.isArray(body.factories)) {
+    writeAll_(body.factories);
+  }
+  return json_({ ok: true, factories: readRows_() });
+}
+
+function readRows_() {
+  var sh = setup_();
+  var vals = sh.getDataRange().getValues();
+  var out = [];
+  if (vals.length <= 1) return out;
+  for (var i = 1; i < vals.length; i++) {
+    var row = vals[i];
+    if (!row[1]) continue; // пропускаем пустые
+    var o = {};
+    for (var c = 0; c < COLS.length; c++) o[COLS[c]] = row[c];
+    if (typeof o.products === 'string') o.products = o.products.split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if (typeof o.contacts === 'string' && o.contacts) {
+      try { o.contacts = JSON.parse(o.contacts); } catch (err) { o.contacts = []; }
+    }
+    out.push(o);
+  }
+  return out;
+}
+
+function writeAll_(factories) {
+  var sh = setup_();
+  var rows = [COLS];
+  for (var i = 0; i < factories.length; i++) {
+    var f = factories[i] || {};
+    rows.push([
+      f.id || '', f.name || '', f.city || '', (f.products || []).join(','), f.reliability || 'unknown',
+      f.moq || '', f.leadTime || '', f.payment || '', f.certifications || '', f.notes || '',
+      JSON.stringify(f.contacts || []), f.createdBy || '', f.updatedBy || '', f.createdAt || '', f.updatedAt || ''
+    ]);
+  }
+  if (rows.length) sh.getRange(1, 1, rows.length, COLS.length).setValues(rows);
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
